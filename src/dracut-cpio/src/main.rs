@@ -138,8 +138,8 @@ impl ArchiveState {
             }
         };
 
-        let major: u32 = (index >> 32).try_into().unwrap();
-        let minor: u32 = (index & u64::from(u32::MAX)).try_into().unwrap();
+        let major: u32 = nix::stat::major(index).try_into().unwrap();
+        let minor: u32 = nix::stat::minor(index).try_into().unwrap();
         Some((major, minor))
     }
 
@@ -159,7 +159,7 @@ impl ArchiveState {
         mapped_nlink: &mut Option<u32>,
     ) -> std::io::Result<bool> {
         assert!(md.nlink() > 1);
-        let index = u64::from(major) << 32 | u64::from(minor);
+        let index = nix::stat::makedev(major.into(), minor.into());
         // reverse index->major/minor conversion that was just done
         let devstate: &mut DevState = &mut self.ids[index as usize];
         let (_index, hl) = match devstate
@@ -362,8 +362,8 @@ fn archive_path<W: Seek + Write>(
     }
 
     if ftype.is_block_device() || ftype.is_char_device() {
-        rmajor = (md.rdev() >> 8) as u32;
-        rminor = (md.rdev() & 0xff) as u32;
+        rmajor = nix::stat::major(md.rdev()).try_into().unwrap();
+        rminor = nix::stat::minor(md.rdev()).try_into().unwrap();
     }
 
     if ftype.is_file() {

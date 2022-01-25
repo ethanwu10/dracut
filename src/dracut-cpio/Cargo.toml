@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 crosvm = { path = "third_party/crosvm" }
+nix = { path = "third_party/nix" }
 # please avoid adding any more dependencies
